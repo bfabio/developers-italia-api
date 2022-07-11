@@ -25,6 +25,9 @@ jobs:
       -
         # For TagBody, TagSubject or TagContents fields in goreleaser's templates
         run: git fetch --force --tags
+
+      - run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u docker --password-stdin
+
       -
         uses: goreleaser/goreleaser-action@v2
         with:
