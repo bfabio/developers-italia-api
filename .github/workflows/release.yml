@@ -27,7 +27,8 @@ jobs:
         run: git fetch --force --tags
 
       - run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u docker --password-stdin
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       -
         uses: goreleaser/goreleaser-action@v2
         with:
