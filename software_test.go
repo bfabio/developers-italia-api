@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -1434,7 +1433,7 @@ func TestSoftwarePostDBChecks(t *testing.T) {
 		loadFixtures(t)
 
 		body := `{"publiccodeYml": "-", "url": "https://analysis-db.example.org", "analysis": {"badges": {"v": 1, "score": 90}}}`
-		req, err := http.NewRequest("POST", "/v1/software", strings.NewReader(body))
+		req, err := newTestRequest("POST", "/v1/software", strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -1454,7 +1453,7 @@ func TestSoftwarePatchDBChecks(t *testing.T) {
 		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
 
 		body := `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`
-		req, err := http.NewRequest("PATCH", "/v1/software/"+softwareID, strings.NewReader(body))
+		req, err := newTestRequest("PATCH", "/v1/software/"+softwareID, strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -1480,7 +1479,7 @@ func TestSoftwarePatchDBChecks(t *testing.T) {
 		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
 
 		body := `{"analysis": {"badges": {"v": 1, "score": 75}}}`
-		req, err := http.NewRequest("PATCH", "/v1/software/"+softwareID, strings.NewReader(body))
+		req, err := newTestRequest("PATCH", "/v1/software/"+softwareID, strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -1574,7 +1573,7 @@ func TestSoftwareAnalysisDBChecks(t *testing.T) {
 		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
 
 		body := `{"badges": {"v": 1, "score": 75}}`
-		req, err := http.NewRequest("PATCH", "/v1/software/"+softwareID+"/analysis", strings.NewReader(body))
+		req, err := newTestRequest("PATCH", "/v1/software/"+softwareID+"/analysis", strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -1604,7 +1603,7 @@ func TestSoftwareDeleteDBChecks(t *testing.T) {
 
 		const softwareID = "11e101c4-f989-4cc4-a665-63f9f34e83f6"
 
-		req, err := http.NewRequest("DELETE", "/v1/software/"+softwareID, nil)
+		req, err := newTestRequest("DELETE", "/v1/software/"+softwareID, nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
