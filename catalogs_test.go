@@ -540,6 +540,29 @@ func TestCatalogEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description:         "GET catalog software filtered by url",
+			query:               "GET /v1/catalogs/" + italiaID + "/software?url=https://1-a.example.org/code/repo",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := assertListResponse(t, response)
+
+				assert.Equal(t, 1, len(data))
+				assert.Equal(t, italiaSoftwareID, data[0]["id"])
+			},
+		},
+		{
+			description:         "GET catalog software filtered by url - not found",
+			query:               "GET /v1/catalogs/" + italiaID + "/software?url=https://no.such.url.example.org",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := assertListResponse(t, response)
+
+				assert.Equal(t, 0, len(data))
+			},
+		},
+		{
 			description:         "GET root catalog software (∅)",
 			query:               "GET /v1/catalogs/%E2%88%85/software",
 			expectedCode:        200,
@@ -703,5 +726,36 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		assert.Equal(t, 1, dbCount(t, "catalog_sources", "catalog_id", italiaID))
 		assert.Equal(t, sourceURL, dbValue(t, "catalog_sources", "url", "catalog_id", italiaID))
 		assert.Equal(t, "gitlab", dbValue(t, "catalog_sources", "driver", "catalog_id", italiaID))
+	})
+
+	t.Run("PATCH persists args as JSON", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"sources":[{"url":"https://example.org/data.json","driver":"json","args":["$.items[*].url"]}]}`
+		req, err := http.NewRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		var catalog map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&catalog))
+
+		sources, ok := catalog["sources"].([]interface{})
+		require.True(t, ok)
+		require.Equal(t, 1, len(sources))
+
+		src := sources[0].(map[string]interface{})
+		assert.Equal(t, "json", src["driver"])
+
+		args, ok := src["args"].([]interface{})
+		require.True(t, ok)
+		require.Equal(t, 1, len(args))
+		assert.Equal(t, "$.items[*].url", args[0])
 	})
 }
